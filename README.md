@@ -20,13 +20,13 @@ Covert array list of object to pdf table
                 val permission = arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 requestPermissions(permission, PdfExtractor.STORAGE_CODE)
             } else {
-                extractPdf(list = userslist, onPdfExtracted = {
+                extractPdf(list = userslist, onPdfExtracted = { it:PdfDocument
 
                 })
             }
 
         } else {
-            extractPdf(list = userslist , onPdfExtracted = {
+            extractPdf(list = userslist , onPdfExtracted = { it:PdfDocument
 
             })
         }
