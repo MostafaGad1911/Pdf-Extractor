@@ -1,5 +1,6 @@
 package mostafa.projects.pdfextractor
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -8,13 +9,14 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.os.StrictMode
-import android.util.Log
 import android.widget.Toast
 import com.google.gson.Gson
 import com.itextpdf.text.Document
 import com.itextpdf.text.Font
 import com.itextpdf.text.Font.BOLD
 import com.itextpdf.text.Font.NORMAL
+import com.itextpdf.text.FontFactory.COURIER
+import com.itextpdf.text.Paragraph
 import com.itextpdf.text.Phrase
 import com.itextpdf.text.pdf.PdfPCell
 import com.itextpdf.text.pdf.PdfPTable
@@ -28,38 +30,42 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 
-class PdfExtractor {
-    companion object {
-        const val STORAGE_CODE = 191110
-         fun <T> Activity.extractPdf(
-            list: ArrayList<T>,
-            onPdfExtracted: (PdfDocument) -> Unit
-        ) {
-            for (i in list) {
-                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
-                    if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-                        val permission = arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                        requestPermissions(permission, STORAGE_CODE)
-                    } else {
-                        savePdf(list = list)
-                    }
+class PdfExtractor constructor() {
+    var listTableContent: ArrayList<Any>? = null
+    var title: String? = null
+    var tableHeaders: ArrayList<String>? = null
+    var docsName: String? = null
 
+    private val STORAGE_CODE = 191110
+    fun <T : Any> Activity.extractPdf(
+        list: ArrayList<T>,
+        onPdfExtracted: (PdfDocument) -> Unit
+    ) {
+        for (i in list!!) {
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+                if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+                    val permission = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    requestPermissions(permission, STORAGE_CODE)
                 } else {
                     savePdf(list = list)
                 }
-            }
 
+            } else {
+                savePdf(list = list)
+            }
         }
 
-        inline fun <T> Activity.savePdf(list: ArrayList<T>) {
-            val headers:java.util.ArrayList<String> = ArrayList()
-            val jsonString = Gson().toJson(list[0])
-            val json = JSONObject(jsonString)
-            for (i in 0 until json.names().length()) {
-                headers.add(json.names().getString(i)).toString()
+    }
 
-            }
-            headers.reverse()
+    private inline fun <T : Any> Activity.savePdf(list: ArrayList<T>? = null) {
+//            val headers: java.util.ArrayList<String> = ArrayList()
+        val jsonString = Gson().toJson(list?.get(0))
+        val json = JSONObject(jsonString)
+        if (json.length() > 0) {
+//                for (i in 0 until json.names().length()) {
+//                    headers.add(json.names().getString(i)).toString()
+//                }
+//                headers.reverse()
 
             val myDoc = Document()
             val mFileName = SimpleDateFormat(
@@ -76,23 +82,22 @@ class PdfExtractor {
                 val fontRow = Font(Font.FontFamily.TIMES_ROMAN, 10F, NORMAL)
 
 
-
-                val rows:ArrayList<java.util.ArrayList<String>> = ArrayList()
+                val rows: ArrayList<ArrayList<String>> = ArrayList()
                 val jsonRowsString = Gson().toJson(list)
                 val jsonArr = JSONArray(jsonRowsString)
                 for (i in 0 until jsonArr.length()) {
                     val item = jsonArr.getJSONObject(i)
 
-                    var row :ArrayList<String> = ArrayList()
+                    var row: ArrayList<String> = ArrayList()
                     for (key in item.keys()) {
                         row.add(item.get(key).toString())
                     }
                     row.reverse()
                     rows.add(row)
                 }
-                val table = PdfPTable(headers.size)
+                val table = PdfPTable(tableHeaders?.size!!)
 
-                for (header in headers) {
+                for (header in tableHeaders!!) {
                     val cell = PdfPCell()
                     cell.grayFill = 0.9f
                     cell.phrase = Phrase(header.lowercase(), fontHeader)
@@ -116,7 +121,8 @@ class PdfExtractor {
                 val target = Intent(Intent.ACTION_VIEW)
 
                 var file = File(mFilePath)
-                val m: Method = StrictMode::class.java.getMethod("disableDeathOnFileUriExposure")
+                val m: Method =
+                    StrictMode::class.java.getMethod("disableDeathOnFileUriExposure")
                 m.invoke(null)
 
                 target.setDataAndType(Uri.fromFile(file), "application/pdf")
@@ -126,14 +132,43 @@ class PdfExtractor {
                 val intent = Intent.createChooser(target, "Open File")
                 startActivity(intent)
 
+
             } catch (e: Exception) {
                 Toast.makeText(this, e.message.toString(), Toast.LENGTH_LONG).show()
             }
+        } else {
+            Toast.makeText(this, "Empty object", Toast.LENGTH_LONG).show()
         }
-
-
     }
 
 
+    inner class Builder {
+
+
+        // Document title
+        fun setDocumentTitle(title: String) = apply {
+            this@PdfExtractor.title = title
+            val p1 = Paragraph(title)
+            val titleFont = Font(Font.FontFamily.COURIER, 15F, BOLD)
+            p1.alignment = Paragraph.ALIGN_CENTER
+            p1.font = titleFont
+
+        }
+
+        // Document table headers
+        fun setHeaders(headers: ArrayList<String>) =
+            apply { this@PdfExtractor.tableHeaders = headers }
+
+        // fill rows of table
+        fun setDocumentContent(content: ArrayList<Any>) =
+            apply { this@PdfExtractor.listTableContent = content }
+
+        // Docs names
+        fun setDocsName(name: String) = apply { this@PdfExtractor.docsName = name }
+
+        fun build(activity: Activity, onPdfExtracted: (PdfDocument) -> Unit) =
+            activity.extractPdf(listTableContent!!, onPdfExtracted)
+
+    }
 
 }
