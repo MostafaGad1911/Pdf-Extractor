@@ -15,20 +15,17 @@ Covert array list of object to pdf table
     userslist.add(User(name = "Mohammed",age =  35 ,  country = "Egypt"))
     userslist.add(User(name = "Kareem", age = 40,  country = "Egypt"))
 
-    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
-            if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-                val permission = arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                requestPermissions(permission, PdfExtractor.STORAGE_CODE)
-            } else {
-                extractPdf(list = userslist, onPdfExtracted = { it:PdfDocument
-
-                })
-            }
-
+    if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+            val permission = arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            requestPermissions(permission, 212)
         } else {
-            extractPdf(list = userslist , onPdfExtracted = { it:PdfDocument
+            PdfExtractor().Builder()
+                .setDocsName("Gad")
+                .setDocumentTitle("Gad Title")
+                .setHeaders(headers)
+                .setDocumentContent(usersList)
+                .build(this)
 
-            })
         }
 ```
 
