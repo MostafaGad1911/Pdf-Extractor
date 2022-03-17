@@ -8,6 +8,12 @@ Covert array list of object to pdf table
 
 # Examples :
 ``` kotlin 
+
+    val headers: ArrayList<String> = ArrayList()
+    headers.add("Name")
+    headers.add("Age")
+    headers.add("Address")
+
        
     var userslist: ArrayList<User> = ArrayList()
     userslist.add(User(name = "Mostafa",age =  15 ,  country = "Egypt"))
