@@ -4,18 +4,16 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.pdf.PdfDocument
 import android.net.Uri
-import android.os.Build
 import android.os.Environment
 import android.os.StrictMode
+import android.util.Log
 import android.widget.Toast
 import com.google.gson.Gson
 import com.itextpdf.text.Document
 import com.itextpdf.text.Font
 import com.itextpdf.text.Font.BOLD
 import com.itextpdf.text.Font.NORMAL
-import com.itextpdf.text.FontFactory.COURIER
 import com.itextpdf.text.Paragraph
 import com.itextpdf.text.Phrase
 import com.itextpdf.text.pdf.PdfPCell
@@ -28,6 +26,7 @@ import java.io.FileOutputStream
 import java.lang.reflect.Method
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.reflect.full.memberProperties
 
 
 class PdfExtractor constructor() {
@@ -38,35 +37,37 @@ class PdfExtractor constructor() {
 
     private val STORAGE_CODE = 191110
     fun <T : Any> Activity.extractPdf(
-        list: ArrayList<T>,
-        onPdfExtracted: (PdfDocument) -> Unit
+        list: ArrayList<T>
     ) {
-        for (i in list!!) {
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
-                if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-                    val permission = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    requestPermissions(permission, STORAGE_CODE)
-                } else {
-                    savePdf(list = list)
-                }
-
+        for (i in list) {
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+                val permission = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                requestPermissions(permission, STORAGE_CODE)
             } else {
                 savePdf(list = list)
             }
         }
-
     }
 
-    private inline fun <T : Any> Activity.savePdf(list: ArrayList<T>? = null) {
-//            val headers: java.util.ArrayList<String> = ArrayList()
+    private fun <T : Any> Activity.savePdf(list: ArrayList<T>? = null) {
+        for (i in list!!) {
+            for (ex in i::class.memberProperties) {
+                var type = ex.returnType.toString().replace("kotlin.", "")
+                if (type?.endsWith("?"))
+                    type = type.replace("?", "")
+                Log.i("GadTest", "$type")
+                if (type != "Int" && type != "String" && type != "Long" && type != "Double" && type != "Boolean") {
+                    throw PdfExtractorException("Invalid data type $type Pdf Extractor support only primitive data types for table columns")
+                    break
+
+                }
+            }
+
+        }
+
         val jsonString = Gson().toJson(list?.get(0))
         val json = JSONObject(jsonString)
         if (json.length() > 0) {
-//                for (i in 0 until json.names().length()) {
-//                    headers.add(json.names().getString(i)).toString()
-//                }
-//                headers.reverse()
-
             val myDoc = Document()
             val mFileName = SimpleDateFormat(
                 "yyyMMdd_HHmmss",
@@ -142,6 +143,11 @@ class PdfExtractor constructor() {
     }
 
 
+    fun String.getLastWord(): String {
+        val parts: Array<String> = this.split(" ").toTypedArray()
+        return parts[parts.size - 1]
+    }
+
     inner class Builder {
 
 
@@ -160,15 +166,17 @@ class PdfExtractor constructor() {
             apply { this@PdfExtractor.tableHeaders = headers }
 
         // fill rows of table
-        fun setDocumentContent(content: ArrayList<Any>) =
-            apply { this@PdfExtractor.listTableContent = content }
+        fun setDocumentContent(content: ArrayList<*>) =
+            apply { this@PdfExtractor.listTableContent = content as ArrayList<Any> }
 
         // Docs names
         fun setDocsName(name: String) = apply { this@PdfExtractor.docsName = name }
 
-        fun build(activity: Activity, onPdfExtracted: (PdfDocument) -> Unit) =
-            activity.extractPdf(listTableContent!!, onPdfExtracted)
+        fun build(activity: Activity) =
+            activity.extractPdf(listTableContent!!)
 
     }
+
+    inner class PdfExtractorException(message: String) : Exception(message)
 
 }
