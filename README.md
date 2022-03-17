@@ -52,7 +52,7 @@ Covert array list of object to pdf table
 
 ## Step 2 : Add the dependency
  ``` kotlin  
-        implementation 'com.github.MostafaGad1911:Pdf-Extractor:'[![](https://jitpack.io/v/MostafaGad1911/Pdf-Extractor.svg)](https://jitpack.io/#MostafaGad1911/Pdf-Extractor)
+        implementation 'com.github.MostafaGad1911:Pdf-Extractor:1.1.0'
         
 ```         
 ## Notes
