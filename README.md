@@ -52,6 +52,8 @@ Covert array list of object to pdf table
         implementation 'com.github.MostafaGad1911:Pdf-Extractor:1.0.0'
         
 ```         
+## Notes
+     Release #1.1.0 Support only english language , and primitive data types for table columns
 
 ## Example
 
