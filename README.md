@@ -53,7 +53,7 @@ Covert array list of object to pdf table
         
 ```         
 ## Notes
-     Release #1.1.0 Support only english language , and primitive data types for table columns
+     Release 1.1.0 Support only english language , and primitive data types for table columns
 
 ## Example
 
