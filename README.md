@@ -8,6 +8,12 @@ Covert array list of object to pdf table
 
 # Examples :
 ``` kotlin 
+
+    val headers: ArrayList<String> = ArrayList()
+    headers.add("Name")
+    headers.add("Age")
+    headers.add("Address")
+
        
     var userslist: ArrayList<User> = ArrayList()
     userslist.add(User(name = "Mostafa",age =  15 ,  country = "Egypt"))
@@ -15,20 +21,17 @@ Covert array list of object to pdf table
     userslist.add(User(name = "Mohammed",age =  35 ,  country = "Egypt"))
     userslist.add(User(name = "Kareem", age = 40,  country = "Egypt"))
 
-    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
-            if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-                val permission = arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                requestPermissions(permission, PdfExtractor.STORAGE_CODE)
-            } else {
-                extractPdf(list = userslist, onPdfExtracted = { it:PdfDocument
-
-                })
-            }
-
+    if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+            val permission = arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            requestPermissions(permission, 212)
         } else {
-            extractPdf(list = userslist , onPdfExtracted = { it:PdfDocument
+            PdfExtractor().Builder()
+                .setDocsName("Gad")
+                .setDocumentTitle("Gad Title")
+                .setHeaders(headers)
+                .setDocumentContent(usersList)
+                .build(this)
 
-            })
         }
 ```
 
@@ -49,9 +52,11 @@ Covert array list of object to pdf table
 
 ## Step 2 : Add the dependency
  ``` kotlin  
-        implementation 'com.github.MostafaGad1911:Pdf-Extractor:1.0.0'
+        implementation 'com.github.MostafaGad1911:Pdf-Extractor:1.1.0'
         
 ```         
+## Notes
+     Release 1.1.0 Support only english language , and primitive data types for table columns
 
 ## Example
 
