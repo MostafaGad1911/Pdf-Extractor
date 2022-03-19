@@ -11,13 +11,10 @@ import android.os.Environment
 import android.os.StrictMode
 import android.widget.Toast
 import com.google.gson.Gson
-import com.itextpdf.text.Document
-import com.itextpdf.text.Font
+import com.itextpdf.text.*
 import com.itextpdf.text.Font.BOLD
 import com.itextpdf.text.Font.NORMAL
 import com.itextpdf.text.FontFactory.COURIER
-import com.itextpdf.text.Paragraph
-import com.itextpdf.text.Phrase
 import com.itextpdf.text.pdf.PdfPCell
 import com.itextpdf.text.pdf.PdfPTable
 import com.itextpdf.text.pdf.PdfWriter
@@ -28,6 +25,10 @@ import java.io.FileOutputStream
 import java.lang.reflect.Method
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.reflect.full.declaredMembers
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.staticProperties
 
 
 class PdfExtractor constructor() {
@@ -35,6 +36,8 @@ class PdfExtractor constructor() {
     var title: String? = null
     var tableHeaders: ArrayList<String>? = null
     var docsName: String? = null
+
+    lateinit var titleParagraph: Paragraph
 
     private val STORAGE_CODE = 191110
     fun <T : Any> Activity.extractPdf(
@@ -57,26 +60,37 @@ class PdfExtractor constructor() {
 
     }
 
-    private inline fun <T : Any> Activity.savePdf(list: ArrayList<T>? = null) {
+    private fun <T : Any> Activity.savePdf(list: ArrayList<T>? = null) {
 //            val headers: java.util.ArrayList<String> = ArrayList()
         val jsonString = Gson().toJson(list?.get(0))
         val json = JSONObject(jsonString)
         if (json.length() > 0) {
-//                for (i in 0 until json.names().length()) {
-//                    headers.add(json.names().getString(i)).toString()
-//                }
-//                headers.reverse()
-
             val myDoc = Document()
-            val mFileName = SimpleDateFormat(
-                "yyyMMdd_HHmmss",
-                Locale.getDefault()
-            ).format(System.currentTimeMillis())
+
+
+            var mFileName = ""
+            if (docsName?.isNotEmpty()!!) {
+                mFileName = docsName!!
+            } else {
+                mFileName = SimpleDateFormat(
+                    "yyyMMdd_HHmmss",
+                    Locale.getDefault()
+                ).format(System.currentTimeMillis())
+
+            }
             val mFilePath =
                 Environment.getExternalStorageDirectory().toString() + "/" + mFileName + ".pdf"
             try {
                 PdfWriter.getInstance(myDoc, FileOutputStream(mFilePath))
                 myDoc.open()
+
+                // Set doc title
+                if (::titleParagraph.isInitialized) {
+                    myDoc.add(titleParagraph)
+                    // add a couple of blank lines
+                    myDoc.add(Chunk.NEWLINE)
+                }
+
 
                 val fontHeader = Font(Font.FontFamily.TIMES_ROMAN, 12F, BOLD)
                 val fontRow = Font(Font.FontFamily.TIMES_ROMAN, 10F, NORMAL)
@@ -95,12 +109,12 @@ class PdfExtractor constructor() {
                     row.reverse()
                     rows.add(row)
                 }
-                val table = PdfPTable(tableHeaders?.size!!)
 
+                val table = PdfPTable(tableHeaders?.size!!)
                 for (header in tableHeaders!!) {
                     val cell = PdfPCell()
                     cell.grayFill = 0.9f
-                    cell.phrase = Phrase(header.lowercase(), fontHeader)
+                    cell.phrase = Phrase(header.replaceFirstChar { it.uppercase() }, fontHeader)
                     table.addCell(cell)
                 }
                 table.completeRow()
@@ -141,6 +155,15 @@ class PdfExtractor constructor() {
         }
     }
 
+    fun Any.containPrimitive(containsPrimitive: (Contain: Boolean) -> Unit) {
+        this = object {
+
+        }
+        for (field in this.it) {
+         print("field $field")
+        }
+    }
+
 
     inner class Builder {
 
@@ -148,11 +171,10 @@ class PdfExtractor constructor() {
         // Document title
         fun setDocumentTitle(title: String) = apply {
             this@PdfExtractor.title = title
-            val p1 = Paragraph(title)
-            val titleFont = Font(Font.FontFamily.COURIER, 15F, BOLD)
-            p1.alignment = Paragraph.ALIGN_CENTER
-            p1.font = titleFont
-
+            titleParagraph = Paragraph(title)
+            val titleFont = Font(Font.FontFamily.COURIER, 25F, BOLD)
+            titleParagraph.alignment = Paragraph.ALIGN_CENTER
+            titleParagraph.font = titleFont
         }
 
         // Document table headers
@@ -166,8 +188,14 @@ class PdfExtractor constructor() {
         // Docs names
         fun setDocsName(name: String) = apply { this@PdfExtractor.docsName = name }
 
-        fun build(activity: Activity, onPdfExtracted: (PdfDocument) -> Unit) =
+        fun build(activity: Activity, onPdfExtracted: (PdfDocument) -> Unit) {
+            for (i in listTableContent!!) {
+                i.containPrimitive(containsPrimitive = {
+
+                })
+            }
             activity.extractPdf(listTableContent!!, onPdfExtracted)
+        }
 
     }
 

@@ -31,15 +31,13 @@ class MainActivity : AppCompatActivity() {
             } else {
                 PdfExtractor().Builder()
                     .setDocsName("Gad")
+                    .setDocsName("Gad15")
                     .setDocumentTitle("Gad Title")
                     .setHeaders(headers)
                     .setDocumentContent(userslist!! as ArrayList<Any>)
                     .build(this, onPdfExtracted = {
-
                     })
-
             }
-
         } else {
             PdfExtractor().Builder()
                 .setDocsName("Gad")
