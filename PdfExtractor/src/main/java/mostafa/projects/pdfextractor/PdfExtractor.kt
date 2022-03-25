@@ -26,6 +26,7 @@ import java.io.FileOutputStream
 import java.lang.reflect.Method
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.reflect.full.memberProperties
 
 
@@ -56,8 +57,8 @@ class PdfExtractor constructor() {
                 if (type?.endsWith("?"))
                     type = type.replace("?", "")
                 Log.i("GadTest", "$type")
-                if (type != "Int" && type != "String" && type != "Long" && type != "Double" && type != "Boolean") {
-                    throw PdfExtractorException("Invalid data type $type Pdf Extractor support only primitive data types for table columns")
+                if (type != "Int" && type != "Long" && type != "Float" && type != "Double" && type != "Boolean"  && type != "String"  && type != "Drawable") {
+                    throw PdfExtractorException("Invalid data type $type not supported in pdf extractor tables")
                     break
 
                 }
@@ -142,11 +143,29 @@ class PdfExtractor constructor() {
         }
     }
 
+    private fun <T : Any> getTableWidths(list: ArrayList<T>? = null) :ArrayList<Int>{
+        var widths:ArrayList<Int> = ArrayList()
+        for (i in list!!) {
+            for (ex in i::class.memberProperties) {
+                var type = ex.returnType.toString().replace("kotlin.", "")
+                if (type?.endsWith("?"))
+                    type = type.replace("?", "")
+                Log.i("GadTest", "$type")
+                if (type != "Int" && type != "Long" && type != "Float" && type != "Double" && type != "Boolean"  && type != "String" ) {
+                    widths.add(200)
+                }else if (type == "Drawable"){
+                    widths.add(400)
+                }else{
+                    throw PdfExtractorException("Invalid data type $type not supported in pdf extractor tables")
+                    break
 
-    fun String.getLastWord(): String {
-        val parts: Array<String> = this.split(" ").toTypedArray()
-        return parts[parts.size - 1]
+                }
+            }
+
+        }
+        return widths
     }
+
 
     inner class Builder {
 
