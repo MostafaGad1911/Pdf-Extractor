@@ -9,13 +9,12 @@ import android.os.Environment
 import android.os.StrictMode
 import android.util.Log
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import com.google.gson.Gson
-import com.itextpdf.text.Document
-import com.itextpdf.text.Font
+import com.itextpdf.text.*
 import com.itextpdf.text.Font.BOLD
 import com.itextpdf.text.Font.NORMAL
-import com.itextpdf.text.Paragraph
-import com.itextpdf.text.Phrase
+import com.itextpdf.text.pdf.BaseFont
 import com.itextpdf.text.pdf.PdfPCell
 import com.itextpdf.text.pdf.PdfPTable
 import com.itextpdf.text.pdf.PdfWriter
@@ -31,12 +30,15 @@ import kotlin.reflect.full.memberProperties
 
 
 class PdfExtractor constructor() {
+
     var listTableContent: ArrayList<Any>? = null
     var title: String? = null
     var tableHeaders: ArrayList<String>? = null
     var docsName: String? = null
 
-    private val STORAGE_CODE = 191110
+
+    private  val STORAGE_CODE = 191110
+
     fun <T : Any> Activity.extractPdf(
         list: ArrayList<T>
     ) {
@@ -100,16 +102,42 @@ class PdfExtractor constructor() {
                 val table = PdfPTable(tableHeaders?.size!!)
 
                 for (header in tableHeaders!!) {
+                    val bf = BaseFont.createFont(
+                        "res/font/arial.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED
+                    )
+                    val enFont = Font(bf, 12f)
+                    enFont.color = BaseColor(ContextCompat.getColor(this, R.color.white))
+                    val phrase = Phrase("$header", enFont)
                     val cell = PdfPCell()
-                    cell.grayFill = 0.9f
-                    cell.phrase = Phrase(header.lowercase(), fontHeader)
+                    cell.addElement(phrase)
+                    cell.phrase = phrase
+                    cell.isUseDescender = true
+                    cell.backgroundColor = BaseColor(ContextCompat.getColor(this, R.color.blue))
+                    cell.verticalAlignment = Element.ALIGN_CENTER
+                    cell.runDirection = PdfWriter.RUN_DIRECTION_RTL
+                    cell.horizontalAlignment = Element.ALIGN_CENTER
+                    cell.paddingBottom = 10f
                     table.addCell(cell)
                 }
                 table.completeRow()
 
                 for (row in rows) {
                     for (data in row) {
-                        val phrase = Phrase(data, fontRow)
+                        val bf = BaseFont.createFont(
+                            "font/arial.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED
+                        )
+                        val enFont = Font(bf, 10f)
+                        enFont.color = BaseColor(ContextCompat.getColor(this,android.R.color.white))
+                        val phrase = Phrase("$data", enFont)
+                        val cell = PdfPCell()
+                        cell.addElement(phrase)
+                        cell.phrase = phrase
+                        cell.isUseDescender = true
+                        cell.backgroundColor = BaseColor(ContextCompat.getColor(this, R.color.orange))
+                        cell.verticalAlignment = Element.ALIGN_CENTER
+                        cell.runDirection = PdfWriter.RUN_DIRECTION_RTL
+                        cell.horizontalAlignment = Element.ALIGN_CENTER
+                        cell.paddingBottom = 10f
                         table.addCell(PdfPCell(phrase))
                     }
                     table.completeRow()
@@ -182,7 +210,13 @@ class PdfExtractor constructor() {
 
         // Document table headers
         fun setHeaders(headers: ArrayList<String>) =
-            apply { this@PdfExtractor.tableHeaders = headers }
+            apply {
+                if (headers.size > 6) {
+                    throw PdfExtractorException("Pdf extractor support to 6 columns only")
+                } else {
+                    this@PdfExtractor.tableHeaders = headers
+                }
+            }
 
         // fill rows of table
         fun setDocumentContent(content: ArrayList<*>) =
