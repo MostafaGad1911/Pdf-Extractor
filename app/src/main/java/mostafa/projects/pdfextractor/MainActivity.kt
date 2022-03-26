@@ -3,23 +3,36 @@ package mostafa.projects.pdfextractor
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import mostafa.projects.pdfextractor.PdfExtractor.Companion.ExtractorLTR
 
 class MainActivity : AppCompatActivity() {
     private var usersList: ArrayList<User> = ArrayList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
 
-        usersList.add(User(name = "Mostafa", age = 15, country = "Egypt"))
-        usersList.add(User(name = "Ahmed", age = 25, country = "Egypt"))
-        usersList.add(User(name = "Mohammed", age = 35, country = "Egypt"))
-        usersList.add(User(name = "Kareem", age = 40, country = "Egypt"))
+        var user = User()
+        user._1name = "Mostafa"
+        user._2age = 28
+        user._3country = "Egypt"
+        user._4image = "https://img.kooora.com/?i=corr%2f139%2fkoo_139038.jpg"
+
+
+        usersList.add(user)
+        usersList.add(user)
+        usersList.add(user)
+        usersList.add(user)
+        usersList.add(user)
+        usersList.add(user)
+        usersList.add(user)
+        usersList.add(user)
+        usersList.add(user)
 
         val headers: ArrayList<String> = ArrayList()
-        headers.add("Name")
-        headers.add("Age")
-        headers.add("Address")
+        headers.add("الإســم")
+        headers.add("العمر")
+        headers.add("العـنوان")
+        headers.add("الصورة")
 
 
 
@@ -32,6 +45,11 @@ class MainActivity : AppCompatActivity() {
                 .setDocumentTitle("Gad Title")
                 .setHeaders(headers)
                 .setDocumentContent(usersList)
+                .setCellColor(R.color.orange)
+                .setHeaderColor(R.color.blue)
+                .setCellTextColor(R.color.blue)
+                .setHeaderTextColor(R.color.white)
+                .setTableDirection(ExtractorLTR)
                 .build(this)
 
         }
