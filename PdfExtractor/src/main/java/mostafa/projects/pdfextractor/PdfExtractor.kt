@@ -38,25 +38,24 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
 
-class PdfExtractor constructor() {
+class PdfExtractor {
 
     var listTableContent: ArrayList<Any>? = null
     var title: String? = null
     var tableHeaders: ArrayList<String>? = null
     var docsName: String? = null
     var ExtractorDirection = 0
-    var widths: ArrayList<Float> = ArrayList()
 
     companion object {
         var ExtractorRTL = 1
         var ExtractorLTR = 2
-
     }
 
     var headerColor = R.color.grey
     var cellColor = R.color.white
     var headerTextColor = R.color.white
     var cellTextColor = R.color.white
+    var loadingColor = R.color.blue
 
 
     val STORAGE_CODE = 191110
@@ -66,22 +65,21 @@ class PdfExtractor constructor() {
     inline fun <reified T : Any> Activity.extractPdf(
         list: ArrayList<T>,
     ) {
-        for (i in list) {
-            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-                val permission = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                requestPermissions(permission, STORAGE_CODE)
-            } else {
-                this.showLoading()
-                CoroutineScope(Dispatchers.IO).launch {
-                    savePdf(list = list)
-                }
-
+        this.showLoading()
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+            val permission = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            requestPermissions(permission, STORAGE_CODE)
+        } else {
+            CoroutineScope(Dispatchers.IO).launch {
+                savePdf(list = list)
             }
+
         }
+
     }
 
     fun Activity.showLoading() {
-        loadingDialog = LoadingDialog(this)
+        loadingDialog = LoadingDialog(this, loadingColor)
         loadingDialog.startLoadingDialog()
     }
 
@@ -227,12 +225,12 @@ class PdfExtractor constructor() {
             for (data in element) {
                 if (!data.isValidUrl()) {
                     if (index == 0) {
-                        widths.add(200f)
+                        widths.add(140f)
 
                     }
                 } else {
                     if (index == 0) {
-                        widths.add(500f)
+                        widths.add(190f)
                     }
 
                 }
@@ -272,7 +270,7 @@ class PdfExtractor constructor() {
                 throw PdfExtractorException("PdfExtractor cell direction not detected use setTableDirection to enable it")
             }
         }
-        cell = PdfPCell(myImg, false)
+        cell = PdfPCell(myImg, true)
         return cell
     }
 
@@ -393,6 +391,9 @@ class PdfExtractor constructor() {
 
         fun setCellTextColor(colorTxtCell: Int) =
             apply { this@PdfExtractor.cellTextColor = colorTxtCell }
+
+        fun setLoadingColor(colorLoading: Int) =
+            apply { this@PdfExtractor.loadingColor = colorLoading }
 
         fun setTableDirection(direction: Int) = apply {
             if (direction != ExtractorLTR && direction != ExtractorRTL)

@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity() {
                 .setCellTextColor(R.color.blue)
                 .setHeaderTextColor(R.color.white)
                 .setTableDirection(ExtractorLTR)
+                .setLoadingColor(R.color.blue)
                 .build(this)
 
         }

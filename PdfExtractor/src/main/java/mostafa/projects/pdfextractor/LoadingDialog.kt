@@ -1,33 +1,43 @@
 package mostafa.projects.pdfextractor
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.app.Dialog
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.util.Log
 import android.view.ViewGroup
 import android.view.Window
-import android.view.WindowManager
+import android.widget.ProgressBar
+import androidx.core.content.ContextCompat
 
 
+class LoadingDialog(activity: Activity, var loadingColor: Int = android.R.color.holo_blue_dark) {
+    private var _activity: Activity = activity
+    private var _dialog: Dialog
+    private var dialogInitiated: Boolean = false
 
-
-class LoadingDialog(activity: Activity) {
-    private var _activity:Activity = activity
-    private lateinit var _dialog: Dialog
-
-
-    fun startLoadingDialog(){
+    init {
         _dialog =
             Dialog(
                 _activity,
                 R.style.DialogFadeAnimation
             ).initDialog(R.layout.loading_lyt)
-        _dialog.show()
+
+        var documentProgressBar = _dialog.findViewById<ProgressBar>(R.id.documentProgressBar)
+        documentProgressBar.indeterminateTintList
+        documentProgressBar.indeterminateDrawable.setColorFilter(
+            ContextCompat.getColor(activity, loadingColor),
+            android.graphics.PorterDuff.Mode.SRC_IN)
     }
 
-    fun Dialog.initDialog(lyt: Int): Dialog {
+    fun startLoadingDialog() {
+        Log.i("ShowDialog", "Test Test")
+        if (!dialogInitiated)
+            _dialog.show()
+        dialogInitiated = true
+    }
+
+    private fun Dialog.initDialog(lyt: Int): Dialog {
         this.requestWindowFeature(Window.FEATURE_NO_TITLE)
         this.window?.setBackgroundDrawable(
             ColorDrawable(Color.TRANSPARENT)
@@ -45,8 +55,8 @@ class LoadingDialog(activity: Activity) {
         return this
     }
 
-    fun dismissDialog(){
-        Log.i("DismissDialog" , "Test Test")
+    fun dismissDialog() {
+        Log.i("DismissDialog", "Test Test")
         _dialog.hide()
         _dialog.dismiss()
     }
