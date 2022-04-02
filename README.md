@@ -9,17 +9,29 @@ Covert array list of object to pdf table
 # Examples :
 ``` kotlin 
 
-    val headers: ArrayList<String> = ArrayList()
-    headers.add("Name")
-    headers.add("Age")
-    headers.add("Address")
+     var user = User()
+        user._1name = "Mostafa"
+        user._2age = 28
+        user._3country = "Egypt"
+        user._4image = "https://png.pngtree.com/png-clipart/20210418/original/pngtree-lettering-ramadan-calligraphy-sticker-arabic-marhaban-ya-ramadhan-kareem-text-png-image_6237398.jpg"
 
-       
-    var userslist: ArrayList<User> = ArrayList()
-    userslist.add(User(name = "Mostafa",age =  15 ,  country = "Egypt"))
-    userslist.add(User(name = "Ahmed", age = 25 ,  country = "Egypt"))
-    userslist.add(User(name = "Mohammed",age =  35 ,  country = "Egypt"))
-    userslist.add(User(name = "Kareem", age = 40,  country = "Egypt"))
+
+        usersList.add(user)
+        usersList.add(user)
+        usersList.add(user)
+        usersList.add(user)
+        usersList.add(user)
+        usersList.add(user)
+        usersList.add(user)
+        usersList.add(user)
+        usersList.add(user)
+
+        val headers: ArrayList<String> = ArrayList()
+        headers.add("الإســم")
+        headers.add("العمر")
+        headers.add("العـنوان")
+        headers.add("الصورة")
+
 
     if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
             val permission = arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -30,6 +42,12 @@ Covert array list of object to pdf table
                 .setDocumentTitle("Gad Title")
                 .setHeaders(headers)
                 .setDocumentContent(usersList)
+                .setCellColor(R.color.orange)
+                .setHeaderColor(R.color.blue)
+                .setCellTextColor(R.color.blue)
+                .setHeaderTextColor(R.color.white)
+                .setTableDirection(ExtractorLTR)
+                .setLoadingColor(R.color.blue)
                 .build(this)
 
         }
