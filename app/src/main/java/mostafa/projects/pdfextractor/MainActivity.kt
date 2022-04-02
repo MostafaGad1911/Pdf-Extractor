@@ -15,7 +15,7 @@ class MainActivity : AppCompatActivity() {
         user._1name = "Mostafa"
         user._2age = 28
         user._3country = "Egypt"
-        user._4image = "https://img.kooora.com/?i=corr%2f139%2fkoo_139038.jpg"
+        user._4image = "https://png.pngtree.com/png-clipart/20210418/original/pngtree-lettering-ramadan-calligraphy-sticker-arabic-marhaban-ya-ramadhan-kareem-text-png-image_6237398.jpg"
 
 
         usersList.add(user)
