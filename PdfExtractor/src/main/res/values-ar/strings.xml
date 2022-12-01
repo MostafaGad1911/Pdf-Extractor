@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="need_storage_access">نحن بحاجة إلى الوصول إلى التخزين الخاص بك لمتابعة العملية. يرجى السماح إذن من خلال شاشة الإعدادات. اختر الصلاحيات/الأذونات -> تمكين إذن</string>
+    <string name="permit_manually">إعطاء الصلاحية يدويًا</string>
+    <string name="cancel">إلغاء</string>
+
+</resources>

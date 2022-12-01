@@ -2,6 +2,7 @@ package mostafa.projects.pdfextractor
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Resources
@@ -10,7 +11,8 @@ import android.os.Environment
 import android.os.StrictMode
 import android.util.Log
 import android.webkit.URLUtil
-import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import com.google.gson.Gson
@@ -23,19 +25,16 @@ import com.itextpdf.text.pdf.PdfWriter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.memberProperties
-import kotlin.reflect.jvm.isAccessible
 
 
 class PdfExtractor {
@@ -44,7 +43,7 @@ class PdfExtractor {
     var title: String? = null
     var tableHeaders: ArrayList<String>? = null
     var docsName: String? = null
-    var ExtractorDirection = 0
+    var extractorDirection = 0
 
     companion object {
         var ExtractorRTL = 1
@@ -58,8 +57,8 @@ class PdfExtractor {
     var loadingColor = R.color.blue
 
 
-    val STORAGE_CODE = 191110
-    lateinit var loadingDialog: LoadingDialog
+    val storageCode = 191110
+    private lateinit var loadingDialog: LoadingDialog
 
 
     inline fun <reified T : Any> Activity.extractPdf(
@@ -68,7 +67,7 @@ class PdfExtractor {
         this.showLoading()
         if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
             val permission = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            requestPermissions(permission, STORAGE_CODE)
+            requestPermissions(permission, storageCode)
         } else {
             CoroutineScope(Dispatchers.IO).launch {
                 savePdf(list = list)
@@ -92,9 +91,9 @@ class PdfExtractor {
         for (i in list!!) {
             for (ex in i::class.memberProperties) {
                 var type = ex.returnType.toString().replace("kotlin.", "")
-                if (type?.endsWith("?"))
+                if (type.endsWith("?"))
                     type = type.replace("?", "")
-                Log.i("GadTest", "$type")
+                Log.i("GadTest", type)
                 if (type != "Int" && type != "Long" && type != "Float" && type != "Double" && type != "Boolean" && type != "String") {
                     throw PdfExtractorException("Invalid data type $type not supported in pdf extractor tables")
                     break
@@ -104,7 +103,7 @@ class PdfExtractor {
         }
 
 
-        val jsonString = Gson().toJson(list?.get(0))
+        val jsonString = Gson().toJson(list[0])
         val json = JSONObject(jsonString)
         if (json.length() > 0) {
             val myDoc = Document()
@@ -128,14 +127,14 @@ class PdfExtractor {
                 for (i in 0 until jsonArr.length()) {
                     val item = jsonArr.getJSONObject(i)
 
-                    var row: ArrayList<String> = ArrayList()
+                    val row: ArrayList<String> = ArrayList()
                     for (key in item.keys()) {
                         row.add(item.get(key).toString())
                     }
                     rows.add(row)
                 }
-                val table = PdfPTable(getTableWidths(list)!!)
-                when (ExtractorDirection) {
+                val table = PdfPTable(getTableWidths(list))
+                when (extractorDirection) {
                     ExtractorRTL -> {
                         table.runDirection = PdfWriter.RUN_DIRECTION_RTL
                     }
@@ -148,7 +147,7 @@ class PdfExtractor {
                 }
 
                 for (header in tableHeaders!!) {
-                    var cell = createHeaderCell(header)
+                    val cell = createHeaderCell(header)
                     table.addCell(cell)
                 }
                 table.completeRow()
@@ -178,7 +177,7 @@ class PdfExtractor {
                 CoroutineScope(Dispatchers.Main).launch {
                     hideLoading()
                     val target = Intent(Intent.ACTION_VIEW)
-                    var file = File(mFilePath)
+                    val file = File(mFilePath)
                     val m: Method =
                         StrictMode::class.java.getMethod("disableDeathOnFileUriExposure")
                     m.invoke(null)
@@ -192,7 +191,7 @@ class PdfExtractor {
 
 
             } catch (e: Exception) {
-                throw PdfExtractorException(e.localizedMessage.toString())
+                throw e.localizedMessage?.let { PdfExtractorException(it) }!!
             }
         } else {
             throw PdfExtractorException("Empty object")
@@ -208,14 +207,14 @@ class PdfExtractor {
 
 
     fun <T : Any> getTableWidths(list: ArrayList<T>? = null): FloatArray {
-        var widths: ArrayList<Float> = ArrayList()
+        val widths: ArrayList<Float> = ArrayList()
         val rows: ArrayList<ArrayList<String>> = ArrayList()
         val jsonRowsString = Gson().toJson(list)
         val jsonArr = JSONArray(jsonRowsString)
         for (i in 0 until jsonArr.length()) {
             val item = jsonArr.getJSONObject(i)
 
-            var row: ArrayList<String> = ArrayList()
+            val row: ArrayList<String> = ArrayList()
             for (key in item.keys()) {
                 row.add(item.get(key).toString())
             }
@@ -244,10 +243,10 @@ class PdfExtractor {
     }
 
 
-    inline fun String.isValidUrl() = URLUtil.isValidUrl(this)
+    fun String.isValidUrl() = URLUtil.isValidUrl(this)
 
     @Throws(DocumentException::class, IOException::class, NullPointerException::class)
-    fun Activity.createImageCell(path: String?): PdfPCell? {
+    fun Activity.createImageCell(path: String?): PdfPCell {
         var cell = PdfPCell()
         val myImg = Image.getInstance(path)
         myImg.scaleAbsolute(190f, 100f)
@@ -259,7 +258,7 @@ class PdfExtractor {
         } else {
             throw PdfExtractorException("Invalid cell color resource : $cellColor")
         }
-        when (ExtractorDirection) {
+        when (extractorDirection) {
             ExtractorRTL -> {
                 cell.runDirection = PdfWriter.RUN_DIRECTION_RTL
             }
@@ -275,7 +274,7 @@ class PdfExtractor {
     }
 
     @Throws(DocumentException::class, IOException::class)
-    fun Activity.createTextCell(text: String?): PdfPCell? {
+    fun Activity.createTextCell(text: String?): PdfPCell {
         val bf = BaseFont.createFont(
             "res/font/arial.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED
         )
@@ -297,7 +296,7 @@ class PdfExtractor {
             throw PdfExtractorException("Invalid cell color resource : $cellColor")
         }
         cell.verticalAlignment = Element.ALIGN_CENTER
-        when (ExtractorDirection) {
+        when (extractorDirection) {
             ExtractorRTL -> {
                 cell.runDirection = PdfWriter.RUN_DIRECTION_RTL
             }
@@ -315,7 +314,7 @@ class PdfExtractor {
     }
 
     @Throws(DocumentException::class, IOException::class)
-    fun Activity.createHeaderCell(text: String?): PdfPCell? {
+    fun Activity.createHeaderCell(text: String?): PdfPCell {
         val bf = BaseFont.createFont(
             "res/font/arial.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED
         )
@@ -336,7 +335,7 @@ class PdfExtractor {
             throw PdfExtractorException("Invalid header color resource : $headerColor")
         }
         cell.verticalAlignment = Element.ALIGN_CENTER
-        when (ExtractorDirection) {
+        when (extractorDirection) {
             ExtractorRTL -> {
                 cell.runDirection = PdfWriter.RUN_DIRECTION_RTL
             }
@@ -351,8 +350,37 @@ class PdfExtractor {
         return cell
     }
 
-    inner class Builder {
+    private fun checkStoragePermission(ctx: Activity): Boolean {
+        return (ActivityCompat.checkSelfPermission(
+            ctx,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED)
+    }
 
+    inner class Builder(private val ctx: Activity) {
+
+        private fun neverAskAgainSelected(): Boolean {
+            return !ActivityCompat.shouldShowRequestPermissionRationale(
+                ctx,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            )
+        }
+
+        private fun displayNeverAskAgainDialog(context: Context) {
+            val builder = AlertDialog.Builder(context)
+            builder.setMessage(ctx.getString(R.string.need_storage_access))
+            builder.setCancelable(false)
+            builder.setPositiveButton(context.getString(R.string.permit_manually)) { dialog, _ ->
+                dialog.dismiss()
+                val intent = Intent()
+                intent.action = android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                val uri = Uri.fromParts("package", context.packageName, null)
+                intent.data = uri
+                context.startActivity(intent)
+            }
+            builder.setNegativeButton(context.getString(R.string.cancel), null)
+            builder.show()
+        }
 
         // Document title
         fun setDocumentTitle(title: String) = apply {
@@ -399,12 +427,18 @@ class PdfExtractor {
             if (direction != ExtractorLTR && direction != ExtractorRTL)
                 throw PdfExtractorException("Pdf Extractor invalid direction , check documentation in github for valid direction ExtractorLTR , ExtractorRTL ")
             else
-                ExtractorDirection = direction
+                extractorDirection = direction
         }
 
-        fun build(activity: Activity) =
-            activity.extractPdf(listTableContent!!)
-
+        fun build(activity: Activity) {
+            if (!checkStoragePermission(ctx = ctx))
+                ActivityCompat.requestPermissions(
+                    ctx,
+                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 1
+                )
+            else
+                activity.extractPdf(listTableContent!!)
+        }
     }
 
     private fun Activity.isColorResource(value: Int): Boolean {

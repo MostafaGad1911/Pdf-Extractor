@@ -1,6 +1,8 @@
 package mostafa.projects.pdfextractor
 
 import android.content.pm.PackageManager
+import android.graphics.Color.blue
+import mostafa.projects.pdfextractor.R
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import mostafa.projects.pdfextractor.PdfExtractor.Companion.ExtractorLTR
@@ -35,24 +37,18 @@ class MainActivity : AppCompatActivity() {
         headers.add("الصورة")
 
 
+        PdfExtractor().Builder(this)
+            .setDocsName("Gad")
+            .setDocumentTitle("Gad Title")
+            .setHeaders(headers)
+            .setDocumentContent(usersList)
+            .setCellColor(mostafa.projects.pdfextractor.R.color.orange)
+            .setHeaderColor(R.color.blue)
+            .setCellTextColor(R.color.blue)
+            .setHeaderTextColor(R.color.white)
+            .setTableDirection(ExtractorLTR)
+            .setLoadingColor(R.color.blue)
+            .build(this)
 
-        if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-            val permission = arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            requestPermissions(permission, 212)
-        } else {
-            PdfExtractor().Builder()
-                .setDocsName("Gad")
-                .setDocumentTitle("Gad Title")
-                .setHeaders(headers)
-                .setDocumentContent(usersList)
-                .setCellColor(R.color.orange)
-                .setHeaderColor(R.color.blue)
-                .setCellTextColor(R.color.blue)
-                .setHeaderTextColor(R.color.white)
-                .setTableDirection(ExtractorLTR)
-                .setLoadingColor(R.color.blue)
-                .build(this)
-
-        }
     }
 }

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="need_storage_access">We need to access your STORAGE to proceed the process. Please permit the permission through Settings screen -> Select Permissions -> Enable permission</string>
+    <string name="permit_manually">Permit Manually</string>
+    <string name="cancel">Cancel</string>
+
+</resources>
